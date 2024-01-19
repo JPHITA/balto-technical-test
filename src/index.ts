@@ -14,7 +14,7 @@ const shopify = shopifyApi({
     scopes: ["customer_read_customers", "customer_write_customers"]
 });
 
-const session = shopify.session.customAppSession("test-store8524.myshopify.com");
+const session = shopify.session.customAppSession(process.env.shop_domain as string);
 session.accessToken = process.env.access_token;
 const client = new shopify.clients.Graphql({session});
 
