@@ -1,0 +1,9 @@
+-- sqlite3
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    shopify_id INTEGER UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    likes_gained INTEGER NOT NULL DEFAULT 0,
+    followers_gained INTEGER NOT NULL DEFAULT 0
+)

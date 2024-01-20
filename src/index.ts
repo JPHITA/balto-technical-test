@@ -2,7 +2,7 @@ import express from 'express';
 import "dotenv/config";
 import '@shopify/shopify-api/adapters/node';
 import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api';
-import { getCustomers } from "./utils/customers";
+import { registerCustomer } from "./utils/customers";
 import { socialmedia_customer } from "./types";
 
 const shopify = shopifyApi({
@@ -24,19 +24,37 @@ const port = 3000;
 app.use(express.json());
 
 app.get('/', async (req, res) => {
-    let customers = await getCustomers(client);
+    // let customers = await getCustomers(client);
 
-    res.send(customers);
-    console.log(customers);
+    // res.send(customers);
+    // console.log(customers);
+
+    registerCustomer({
+        customer_shopify_id: 123,
+        email: "sss",
+        likes_gained_today: 0,
+        followers_gained_today: 0
+    });
+
+    res.send("ok");
 });
 
 app.post('/socialmedia_endpoint', (req, res) => {
-    const customers = req.body.payload as socialmedia_customer[];
-    
-    // TODO:
-    // registrar en la base de datos los usuarios que no estan registrados (sqlite)
-    // actualizar los likes y followers de los usuarios
-    // actualizar en la API los usuarios que se nuevos ?????
+    try {
+        const customers = req.body.payload as socialmedia_customer[];
+
+        customers.forEach((customer) => {
+            registerCustomer(customer);
+        });
+        
+        // TODO:
+        // actualizar los likes y followers de los usuarios
+        // actualizar en la API los usuarios que se nuevos ?????
+
+        res.status(200).send("ok");
+    } catch (error) {
+        res.status(500).send(error);
+    }
 
 });
 
