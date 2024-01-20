@@ -23,15 +23,18 @@ const port = 3000;
 
 app.use(express.json());
 
-app.get('/', async (req, res) => {
-    const r = await Customer.get_shopify_customer(client, 6989017612483);
+// app.get('/', async (req, res) => {
+//     const r = await Customer.get_shopify_customer(client, 6989017612483);
 
-    res.send(r);
-});
+//     res.send(r);
+// });
 
 app.post('/socialmedia_endpoint', (req, res) => {
-    // authenticate ??
     try {
+        // if (req.headers.authorization !== "auth token for social media"){
+        //     return res.sendStatus(401);
+        // }
+
         const customers = req.body.payload as socialmedia_customer[];
         
         Customer.save_from_socialmedia(client, customers);
@@ -42,6 +45,10 @@ app.post('/socialmedia_endpoint', (req, res) => {
         res.status(500).send(error);
     }
 
+});
+
+app.get('/send_email', async (req, res) => {
+    
 });
 
 app.listen(port, () => {

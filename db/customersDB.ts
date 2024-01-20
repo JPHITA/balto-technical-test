@@ -19,5 +19,9 @@ export class Database{
 
         return this.DB;
     }
+
+    public static close(){
+        if (this.DB) this.DB.close();
+    }
 }
 
