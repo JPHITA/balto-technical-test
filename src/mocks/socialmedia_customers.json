@@ -1,0 +1,26 @@
+[
+    {
+        "Customer ID": "6970051494083",
+        "Email": "karine.ruby@example.com",
+        "likes_gained": 7,
+        "followers_gained": 3
+    },
+    {
+        "Customer ID": "6970051526851",
+        "Email": "ayumu.hirano@example.com",
+        "likes_gained": 2,
+        "followers_gained": 9
+    },
+    {
+        "Customer ID": "6970051559619",
+        "Email": "russel.winfield@example.com",
+        "likes_gained": 5,
+        "followers_gained": 1
+    },
+    {
+        "Customer ID": "6989017612483",
+        "Email": "prueba@prueba.com",
+        "likes_gained": 8,
+        "followers_gained": 6
+    }
+]

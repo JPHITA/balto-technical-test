@@ -37,7 +37,13 @@ export class Customer {
         const db = await Database.init();
 
         const res = db.run(
-            "UPDATE users SET likes_gained = ?, followers_gained = ?, email = ? WHERE shopify_id = ?",
+            `
+            UPDATE users SET 
+                likes_gained = likes_gained + ?,
+                followers_gained = followers_gained + ?,
+                email = ? 
+            WHERE shopify_id = ?
+            `,
             customer.likes_gained_today, customer.followers_gained_today, customer.email, customer.customer_shopify_id
         );
 

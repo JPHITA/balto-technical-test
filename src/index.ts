@@ -30,6 +30,7 @@ app.get('/', async (req, res) => {
 });
 
 app.post('/socialmedia_endpoint', (req, res) => {
+    // authenticate ??
     try {
         const customers = req.body.payload as socialmedia_customer[];
 
