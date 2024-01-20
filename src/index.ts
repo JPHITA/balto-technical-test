@@ -3,6 +3,7 @@ import "dotenv/config";
 import '@shopify/shopify-api/adapters/node';
 import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api';
 import { Customer } from "./services/customers";
+import { Email_Service } from './services/email';
 import { socialmedia_customer } from "./types";
 
 const shopify = shopifyApi({
@@ -23,12 +24,6 @@ const port = 3000;
 
 app.use(express.json());
 
-// app.get('/', async (req, res) => {
-//     const r = await Customer.get_shopify_customer(client, 6989017612483);
-
-//     res.send(r);
-// });
-
 app.post('/socialmedia_endpoint', (req, res) => {
     try {
         // if (req.headers.authorization !== "auth token for social media"){
@@ -48,7 +43,19 @@ app.post('/socialmedia_endpoint', (req, res) => {
 });
 
 app.get('/send_email', async (req, res) => {
-    
+    try {
+        const top_socialmedia_customers = await Customer.get_top_socialmedia_customers();
+
+        for (const customer of top_socialmedia_customers) {
+            const shopify_customer = await Customer.get_shopify_customer(client, customer.shopify_id);
+
+            Email_Service.send_email(shopify_customer!, customer);
+        }
+
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).send(error);
+    }
 });
 
 app.listen(port, () => {

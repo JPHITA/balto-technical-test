@@ -1,5 +1,5 @@
 import { GraphqlClient } from "@shopify/shopify-api/lib/clients/admin/graphql/client";
-import { socialmedia_customer, shopify_customer } from "../types";
+import { socialmedia_customer, shopify_customer, DB_customer } from "../types";
 import { Database } from "../../db/customersDB";
 
 export class Customer {
@@ -13,14 +13,21 @@ export class Customer {
             for (const customer of customers) {
                 const customer_exists = await Customer.verify_customer_exists(customer.customer_shopify_id);
                 
+                const DBcustomer: DB_customer = {
+                    shopify_id: customer.customer_shopify_id,
+                    email: "",
+                    likes_gained: customer.likes_gained_today,
+                    followers_gained: customer.followers_gained_today
+                }
+
                 // get email
                 const shopify_customer = await Customer.get_shopify_customer(client, customer.customer_shopify_id);
-                customer.email = shopify_customer?.email;
+                DBcustomer.email = shopify_customer?.email!;
 
                 if (customer_exists) {
-                    await Customer.update_socialmedia_customer(customer);
+                    await Customer.update_socialmedia_customer(DBcustomer);
                 } else {
-                    await Customer.register_socialmedia_customer(customer);
+                    await Customer.register_socialmedia_customer(DBcustomer);
                 }
             }
 
@@ -31,13 +38,13 @@ export class Customer {
         }
     }
     
-    public static async register_socialmedia_customer(customer: socialmedia_customer) {
+    public static async register_socialmedia_customer(customer: DB_customer) {
         const db = await Database.init();
         
         try {
             const res = await db.run(
                 "INSERT INTO users (shopify_id, email, likes_gained, followers_gained) VALUES (?, ?, ?, ?)",
-                customer.customer_shopify_id, customer.email, customer.likes_gained_today, customer.followers_gained_today
+                customer.shopify_id, customer.email, customer.likes_gained, customer.followers_gained
             );
 
             return res;
@@ -46,7 +53,7 @@ export class Customer {
         }
     }
 
-    public static async update_socialmedia_customer(customer: socialmedia_customer) {
+    public static async update_socialmedia_customer(customer: DB_customer) {
         const db = await Database.init();
 
         try {
@@ -55,7 +62,23 @@ export class Customer {
                 UPDATE users SET 
                     likes_gained = likes_gained + ?, followers_gained = followers_gained + ?, email = ? WHERE shopify_id = ?
                 `,
-                customer.likes_gained_today, customer.followers_gained_today, customer.email, customer.customer_shopify_id
+                customer.likes_gained, customer.followers_gained, customer.email, customer.shopify_id
+            );
+
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    public static async get_top_socialmedia_customers() {
+        const db = await Database.init();
+
+        try {
+            const res = await db.all<DB_customer[]>(
+                `
+                SELECT * FROM users ORDER BY followers_gained DESC, likes_gained DESC LIMIT 10
+                `
             );
 
             return res;
@@ -88,6 +111,7 @@ export class Customer {
                         id
                         displayName
                         email
+                        createdAt
                     }
                 }
             `,
