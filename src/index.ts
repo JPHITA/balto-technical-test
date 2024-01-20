@@ -2,7 +2,7 @@ import express from 'express';
 import "dotenv/config";
 import '@shopify/shopify-api/adapters/node';
 import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api';
-import { registerCustomer } from "./utils/customers";
+import { Customer } from "./services/customers";
 import { socialmedia_customer } from "./types";
 
 const shopify = shopifyApi({
@@ -24,34 +24,18 @@ const port = 3000;
 app.use(express.json());
 
 app.get('/', async (req, res) => {
-    // let customers = await getCustomers(client);
+    const r = await Customer.verify_customer_exists(123)
 
-    // res.send(customers);
-    // console.log(customers);
-
-    registerCustomer({
-        customer_shopify_id: 123,
-        email: "sss",
-        likes_gained_today: 0,
-        followers_gained_today: 0
-    });
-
-    res.send("ok");
+    res.send(r);
 });
 
 app.post('/socialmedia_endpoint', (req, res) => {
     try {
         const customers = req.body.payload as socialmedia_customer[];
 
-        customers.forEach((customer) => {
-            registerCustomer(customer);
-        });
-        
-        // TODO:
-        // actualizar los likes y followers de los usuarios
-        // actualizar en la API los usuarios que se nuevos ?????
+        Customer.save_from_socialmedia(customers);
 
-        res.status(200).send("ok");
+        res.sendStatus(200);
     } catch (error) {
         res.status(500).send(error);
     }
