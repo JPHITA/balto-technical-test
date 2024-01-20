@@ -1,26 +1,22 @@
 [
     {
-        "Customer ID": "6970051494083",
-        "Email": "karine.ruby@example.com",
-        "likes_gained": 7,
-        "followers_gained": 3
+        "customer_shopify_id": 6970051494083,
+        "likes_gained_today": 7,
+        "followers_gained_today": 3
     },
     {
-        "Customer ID": "6970051526851",
-        "Email": "ayumu.hirano@example.com",
-        "likes_gained": 2,
-        "followers_gained": 9
+        "customer_shopify_id": 6970051526851,
+        "likes_gained_today": 2,
+        "followers_gained_today": 9
     },
     {
-        "Customer ID": "6970051559619",
-        "Email": "russel.winfield@example.com",
-        "likes_gained": 5,
-        "followers_gained": 1
+        "customer_shopify_id": 6970051559619,
+        "likes_gained_today": 5,
+        "followers_gained_today": 1
     },
     {
-        "Customer ID": "6989017612483",
-        "Email": "prueba@prueba.com",
-        "likes_gained": 8,
-        "followers_gained": 6
+        "customer_shopify_id": 6989017612483,
+        "likes_gained_today": 8,
+        "followers_gained_today": 6
     }
 ]

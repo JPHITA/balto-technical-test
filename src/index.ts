@@ -24,7 +24,7 @@ const port = 3000;
 app.use(express.json());
 
 app.get('/', async (req, res) => {
-    const r = await Customer.verify_customer_exists(123)
+    const r = await Customer.get_shopify_customer(client, 6989017612483);
 
     res.send(r);
 });
@@ -33,11 +33,12 @@ app.post('/socialmedia_endpoint', (req, res) => {
     // authenticate ??
     try {
         const customers = req.body.payload as socialmedia_customer[];
-
-        Customer.save_from_socialmedia(customers);
+        
+        Customer.save_from_socialmedia(client, customers);
 
         res.sendStatus(200);
     } catch (error) {
+        console.log(error);
         res.status(500).send(error);
     }
 
