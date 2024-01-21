@@ -15,9 +15,9 @@ interface shopify_customer {
 interface DB_customer {
     id?: number,
     shopify_id: number,
-    email: string,
-    likes_gained: number,
-    followers_gained: number,
+    email?: string,
+    likes_gained?: number,
+    followers_gained?: number,
 }
 
 export {

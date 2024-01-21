@@ -10,25 +10,14 @@ export class Customer {
         try {
             db.run("BEGIN TRANSACTION");
 
-            for (const customer of customers) {
-                const customer_exists = await Customer.verify_customer_exists(customer.customer_shopify_id);
-                
+            for (const customer of customers) {                
                 const DBcustomer: DB_customer = {
                     shopify_id: customer.customer_shopify_id,
-                    email: "",
                     likes_gained: customer.likes_gained_today,
                     followers_gained: customer.followers_gained_today
                 }
 
-                // get email
-                const shopify_customer = await Customer.get_shopify_customer(client, customer.customer_shopify_id);
-                DBcustomer.email = shopify_customer?.email!;
-
-                if (customer_exists) {
-                    await Customer.update_socialmedia_customer(DBcustomer);
-                } else {
-                    await Customer.register_socialmedia_customer(DBcustomer);
-                }
+                await Customer.update_socialmedia_customer(DBcustomer);
             }
 
             db.run("COMMIT");
@@ -43,8 +32,8 @@ export class Customer {
         
         try {
             const res = await db.run(
-                "INSERT INTO users (shopify_id, email, likes_gained, followers_gained) VALUES (?, ?, ?, ?)",
-                customer.shopify_id, customer.email, customer.likes_gained, customer.followers_gained
+                "INSERT INTO users (shopify_id, email, likes_gained, followers_gained) VALUES (?, ?, 0, 0)",
+                customer.shopify_id, customer.email
             );
 
             return res;
@@ -57,12 +46,30 @@ export class Customer {
         const db = await Database.init();
 
         try {
+            const params = [];
+            let fields = "";
+            for (const key in customer) {
+                const field = key as keyof DB_customer;
+
+                if (["shopify_id", "id"].includes(field)) continue;
+                if (customer[field] === undefined) continue;
+
+                params.push(customer[field]);
+
+                if (field === "email") {
+                    fields += "email = ?,"
+                } else {
+                    fields += `${field} = ${field} + ?,`
+                }
+            }
+
             const res = db.run(
                 `
                 UPDATE users SET 
-                    likes_gained = likes_gained + ?, followers_gained = followers_gained + ?, email = ? WHERE shopify_id = ?
+                    ${fields.slice(0, -1)}
+                WHERE shopify_id = ?
                 `,
-                customer.likes_gained, customer.followers_gained, customer.email, customer.shopify_id
+                ...params, customer.shopify_id
             );
 
             return res;
@@ -82,21 +89,6 @@ export class Customer {
             );
 
             return res;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    public static async verify_customer_exists(customer_shopify_id: number) {
-        const db = await Database.init();
-
-        try {
-            const res = await db.get(
-                "SELECT EXISTS (SELECT 1 FROM users WHERE shopify_id = ?) AS exists_shopify_id",
-                customer_shopify_id
-            );
-
-            return res.exists_shopify_id === 1;
         } catch (error) {
             throw error;
         }
