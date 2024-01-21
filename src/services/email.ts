@@ -1,6 +1,9 @@
 import nodemailer from 'nodemailer';
 import { shopify_customer, DB_customer } from "./../types";
 
+/**
+ * Represents an email service that sends congratulatory emails to customers.
+ */
 const transporter = nodemailer.createTransport({
     service: "Gmail",
     host: "smtp.gmail.com",
@@ -13,9 +16,15 @@ const transporter = nodemailer.createTransport({
 });
 
 export class Email_Service{
+    /**
+     * Sends the congratulatory email to a customer.
+     * @param shopify_cust - The Shopify customer object.
+     * @param DB_cust - The database customer object.
+     */
     public static async send_email(shopify_cust: shopify_customer, DB_cust: DB_customer){
         try {
 
+            // Format the date when the customer signed up.
             let date_signed_up = (new Date(shopify_cust.createdAt)).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',

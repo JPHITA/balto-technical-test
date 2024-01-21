@@ -2,8 +2,18 @@ import { GraphqlClient } from "@shopify/shopify-api/lib/clients/admin/graphql/cl
 import { socialmedia_customer, shopify_customer, DB_customer } from "../types";
 import { Database } from "../../db/customersDB";
 
+
+/**
+ * class containing the functions to manage the logic for a customer.
+ */
 export class Customer {
 
+    /**
+     * Saves customers sent from the socialmedia to the local customers database.
+     * 
+     * @param client - The GraphQL client.
+     * @param customers - An array of social media customers to save.
+     */
     public static async save_from_socialmedia(client: GraphqlClient, customers: socialmedia_customer[]) {
         const db = await Database.init();
 
@@ -36,6 +46,11 @@ export class Customer {
         }
     }
     
+
+    /**
+     * Registers a customer in the local customers database.
+     * @param customer - The customer object to be registered.
+     */
     public static async register_customer(customer: DB_customer) {
         const db = await Database.init();
         
@@ -51,10 +66,15 @@ export class Customer {
         }
     }
 
+    /**
+     * Updates a customer in the database.
+     * @param customer - The customer object to update.
+     */
     public static async update_customer(customer: DB_customer) {
         const db = await Database.init();
 
         try {
+            // only update the fields that are not undefined
             const params = [];
             let fields = "";
             for (const key in customer) {
@@ -87,6 +107,10 @@ export class Customer {
         }
     }
 
+    
+    /**
+     * Retrieves the top social media customers based on the number of followers gained and likes gained.
+     */
     public static async get_top_socialmedia_customers() {
         const db = await Database.init();
 
@@ -103,6 +127,11 @@ export class Customer {
         }
     }
     
+
+    /**
+     * Verifies if a customer with the given Shopify ID exists in the database.
+     * @param customer_shopify_id - The Shopify ID of the customer to verify.
+     */
     public static async verify_customer_exists(customer_shopify_id: number) {
         const db = await Database.init();
 
@@ -118,6 +147,12 @@ export class Customer {
         }
     }
 
+
+    /**
+     * Retrieves a Shopify customer by their ID.
+     * @param client - The GraphQL client.
+     * @param shopify_id - The ID of the Shopify customer.
+     */
     public static async get_shopify_customer(client: GraphqlClient, shopify_id: number) {
         try {
             

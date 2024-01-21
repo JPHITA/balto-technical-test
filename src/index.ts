@@ -7,6 +7,7 @@ import { Customer } from "./services/customers";
 import { Email_Service } from './services/email';
 import { DB_customer, socialmedia_customer } from "./types";
 
+// setting up the shopify api for a custom app
 const shopify = shopifyApi({
     apiKey: process.env.api_key,
     apiSecretKey: process.env.api_secret_key as string,
@@ -15,7 +16,6 @@ const shopify = shopifyApi({
     isEmbeddedApp: false,
     scopes: ["customer_read_customers", "customer_write_customers"]
 });
-
 const session = shopify.session.customAppSession(process.env.shop_domain as string);
 session.accessToken = process.env.access_token;
 const client = new shopify.clients.Graphql({ session });
@@ -29,8 +29,10 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
+// endpoint for social media to send customers webhooks
 app.post('/socialmedia_endpoint', (req, res) => {
     try {
+        // authorization token for social media
         // if (req.headers.authorization !== "auth token for social media"){
         //     return res.sendStatus(401);
         // }
@@ -47,6 +49,7 @@ app.post('/socialmedia_endpoint', (req, res) => {
 
 });
 
+// endpoint for sending the congratulatory email to the top 10 customers
 app.get('/send_email', async (req, res) => {
     try {
         const top_socialmedia_customers = await Customer.get_top_socialmedia_customers();
@@ -63,6 +66,7 @@ app.get('/send_email', async (req, res) => {
     }
 });
 
+// endpoint to manage the event of a customer updating their email in shopify
 app.post('/webhooks/customer_update', express.text({type: '*/*'}), async (req, res) => {
     try {
         const { valid } = await shopify.webhooks.validate({
@@ -90,6 +94,7 @@ app.post('/webhooks/customer_update', express.text({type: '*/*'}), async (req, r
     }
 });
 
+// endpoint to manage the event of a customer creating their account in shopify
 app.post('/webhooks/customer_create', express.text({type: '*/*'}), async (req, res) => {
     try {
         const { valid } = await shopify.webhooks.validate({

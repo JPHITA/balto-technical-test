@@ -1,12 +1,20 @@
+
 import { open, Database as sqliteDB } from "sqlite";
 import sqlite3 from "sqlite3";
 import fs from "fs";
 
-
-export class Database{
+/**
+ * Represents a connection to the local customers database.
+ */
+export class Database {
     private static DB: sqliteDB<sqlite3.Database, sqlite3.Statement> | null = null;
 
-    public static async init(){
+    /**
+     * Initializes the database connection.
+     * 
+     * @returns The database connection.
+     */
+    public static async init(): Promise<sqliteDB<sqlite3.Database, sqlite3.Statement>> {
         if (!this.DB) {
             this.DB = await open({
                 filename: "./db/database.db",
@@ -20,7 +28,7 @@ export class Database{
         return this.DB;
     }
 
-    public static close(){
+    public static close(): void {
         if (this.DB) this.DB.close();
     }
 }
