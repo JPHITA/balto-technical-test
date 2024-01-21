@@ -10,14 +10,23 @@ export class Customer {
         try {
             db.run("BEGIN TRANSACTION");
 
-            for (const customer of customers) {                
+            for (const customer of customers) {     
+                const customer_exists = await Customer.verify_customer_exists(customer.customer_shopify_id);
+
                 const DBcustomer: DB_customer = {
                     shopify_id: customer.customer_shopify_id,
                     likes_gained: customer.likes_gained_today,
                     followers_gained: customer.followers_gained_today
                 }
 
-                await Customer.update_socialmedia_customer(DBcustomer);
+                if (customer_exists) {
+                    await Customer.update_customer(DBcustomer);
+                }else{
+                    const new_customer_email = (await Customer.get_shopify_customer(client, customer.customer_shopify_id))!.email;
+                    DBcustomer.email = new_customer_email;
+
+                    await Customer.register_customer(DBcustomer);
+                }
             }
 
             db.run("COMMIT");
@@ -27,13 +36,13 @@ export class Customer {
         }
     }
     
-    public static async register_socialmedia_customer(customer: DB_customer) {
+    public static async register_customer(customer: DB_customer) {
         const db = await Database.init();
         
         try {
             const res = await db.run(
-                "INSERT INTO users (shopify_id, email, likes_gained, followers_gained) VALUES (?, ?, 0, 0)",
-                customer.shopify_id, customer.email
+                "INSERT INTO users (shopify_id, email, likes_gained, followers_gained) VALUES (?, ?, ?, ?)",
+                customer.shopify_id, customer.email, customer.likes_gained, customer.followers_gained
             );
 
             return res;
@@ -42,7 +51,7 @@ export class Customer {
         }
     }
 
-    public static async update_socialmedia_customer(customer: DB_customer) {
+    public static async update_customer(customer: DB_customer) {
         const db = await Database.init();
 
         try {
@@ -89,6 +98,21 @@ export class Customer {
             );
 
             return res;
+        } catch (error) {
+            throw error;
+        }
+    }
+    
+    public static async verify_customer_exists(customer_shopify_id: number) {
+        const db = await Database.init();
+
+        try {
+            const res = await db.get(
+                "SELECT EXISTS (SELECT 1 FROM users WHERE shopify_id = ?) AS exists_shopify_id",
+                customer_shopify_id
+            );
+
+            return res.exists_shopify_id === 1;
         } catch (error) {
             throw error;
         }

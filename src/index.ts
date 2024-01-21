@@ -5,7 +5,7 @@ import { shopifyApi, LATEST_API_VERSION, DeliveryMethod } from '@shopify/shopify
 import ngrok from '@ngrok/ngrok';
 import { Customer } from "./services/customers";
 import { Email_Service } from './services/email';
-import { socialmedia_customer } from "./types";
+import { DB_customer, socialmedia_customer } from "./types";
 
 const shopify = shopifyApi({
     apiKey: process.env.api_key,
@@ -20,43 +20,14 @@ const session = shopify.session.customAppSession(process.env.shop_domain as stri
 session.accessToken = process.env.access_token;
 const client = new shopify.clients.Graphql({ session });
 
-(async () => {
-    shopify.webhooks.addHandlers({
-        'CUSTOMERS_CREATE': [
-            {
-                deliveryMethod: DeliveryMethod.Http,
-                // callbackUrl: 'https://host/webhooks',
-                callbackUrl: '/webhooks',
-                callback: async (
-                    ...data
-                ) => {
-                    console.log(data);
-                }
-            },
-        ],
-        'CUSTOMERS_UPDATE': [
-            {
-                deliveryMethod: DeliveryMethod.Http,
-                // callbackUrl: 'https://host/webhooks',
-                callbackUrl: '/webhooks',
-                callback: async (
-                    ...data
-                ) => {
-                    console.log(data);
-                }
-            },
-        ]
-    });
-
-    const webhooks = await shopify.webhooks.register({ session });
-
-    console.log(webhooks);
-})();
-
 const app = express();
 const port = 3000;
 
 app.use(express.json());
+
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
 
 app.post('/socialmedia_endpoint', (req, res) => {
     try {
@@ -92,13 +63,57 @@ app.get('/send_email', async (req, res) => {
     }
 });
 
-app.post('/webhooks', express.text({ type: '*/*' }), async (req, res) => {
+app.post('/webhooks/customer_update', express.text({type: '*/*'}), async (req, res) => {
     try {
-        await shopify.webhooks.process({
+        const { valid } = await shopify.webhooks.validate({
             rawBody: req.body,
             rawRequest: req,
             rawResponse: res,
-        });
+          });
+        
+        if (!valid) {
+            console.log('Invalid webhook call, not handling it');
+            res.sendStatus(400);
+            return;
+        }
+    
+        const customer: DB_customer = {
+            shopify_id: req.body.id,
+            email:  req.body.email,
+        }
+        
+        await Customer.update_customer(customer);
+
+        res.sendStatus(200);
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+app.post('/webhooks/customer_create', express.text({type: '*/*'}), async (req, res) => {
+    try {
+        const { valid } = await shopify.webhooks.validate({
+            rawBody: req.body,
+            rawRequest: req,
+            rawResponse: res,
+          });
+        
+        if (!valid) {
+            console.log('Invalid webhook call, not handling it');
+            res.sendStatus(400);
+            return;
+        }
+
+        const customer: DB_customer = {
+            shopify_id: req.body.id,
+            email:  req.body.email,
+            likes_gained: 0,
+            followers_gained: 0
+        }
+        
+        await Customer.register_customer(customer);
+
+        res.sendStatus(200);
     } catch (error) {
         console.log(error);
     }
@@ -106,4 +121,26 @@ app.post('/webhooks', express.text({ type: '*/*' }), async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
+});
+
+ngrok.connect({addr: port, authtoken_from_env: true}).then(async (listener) => {
+    shopify.webhooks.addHandlers({
+        'CUSTOMERS_CREATE': [
+            {
+                deliveryMethod: DeliveryMethod.Http,
+                callbackUrl: listener.url() + '/webhooks/customer_create',
+            },
+        ],
+        'CUSTOMERS_UPDATE': [
+            {
+                deliveryMethod: DeliveryMethod.Http,
+                callbackUrl: listener.url() + '/webhooks/customer_update',
+            },
+        ]
+    });
+
+    const webhooks = await shopify.webhooks.register({ session });
+    console.log(webhooks);
+
+    console.log("ngrok running on: ", listener.url());
 });
