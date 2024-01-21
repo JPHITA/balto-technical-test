@@ -2,6 +2,7 @@ import express from 'express';
 import "dotenv/config";
 import '@shopify/shopify-api/adapters/node';
 import { shopifyApi, LATEST_API_VERSION, DeliveryMethod } from '@shopify/shopify-api';
+import ngrok from '@ngrok/ngrok';
 import { Customer } from "./services/customers";
 import { Email_Service } from './services/email';
 import { socialmedia_customer } from "./types";
